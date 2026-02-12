@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>TravelAI | Log in</title>
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+  <header class="site-header">
+    <div class="container nav-wrap">
+      <a class="brand" href="index.html">TravelAI</a>
+      <nav class="main-nav" aria-label="Primary">
+        <a href="index.html#searchPanel">Search</a>
+        <a href="results.html?type=packages">Packages</a>
+        <a href="results.html?type=flights">Flights</a>
+        <a href="results.html?type=hotels">Hotels</a>
+      </nav>
+      <div class="auth-actions">
+        <button class="login" type="button" disabled>Log in</button>
+        <a class="sign-in auth-link-btn" href="login.html">Sign in</a>
+      </div>
+    </div>
+  </header>
+
+  <main class="login-shell">
+    <section class="login-card" aria-label="Login form">
+      <h1>Welcome back</h1>
+      <p>Log in to save trips, track prices, and book faster.</p>
+
+      <form id="loginForm" class="login-form">
+        <label>
+          <span>Email</span>
+          <input type="email" name="email" placeholder="you@example.com" required>
+        </label>
+
+        <label>
+          <span>Password</span>
+          <input type="password" name="password" placeholder="Enter your password" required>
+        </label>
+
+        <label class="inline-check">
+          <input type="checkbox" name="rememberMe">
+          <span>Remember me</span>
+        </label>
+
+        <button id="loginSubmit" type="submit" class="btn-primary full-width">Log in</button>
+      </form>
+
+      <p id="loginStatus" class="login-status">Enter credentials to continue.</p>
+      <a class="login-back" href="index.html">Back to home</a>
+    </section>
+  </main>
+
+  <script src="js/login.js"></script>
+</body>
+</html>

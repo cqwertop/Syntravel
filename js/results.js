@@ -22,8 +22,8 @@ const payload = {
 };
 
 loadResults();
-loginBtn.addEventListener("click", () => handleAuthClick("login"));
-signInBtn.addEventListener("click", () => handleAuthClick("signin"));
+loginBtn.addEventListener("click", goToLogin);
+signInBtn.addEventListener("click", goToLogin);
 
 async function loadResults() {
   statusText.textContent = "Loading live options...";
@@ -163,9 +163,9 @@ function mockResults(input) {
   ];
 }
 
-function handleAuthClick(mode) {
-  const target = mode === "login" ? "Login" : "Sign in";
-  alert(`${target} flow placeholder. Connect this button to your auth provider.`);
+function goToLogin() {
+  const redirect = encodeURIComponent(window.location.pathname + window.location.search);
+  window.location.href = `login.html?redirect=${redirect}`;
 }
 
 function escapeHtml(value) {

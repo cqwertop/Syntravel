@@ -63,7 +63,8 @@ body {
 }
 
 .sign-in,
-.login {
+.login,
+.auth-link-btn {
   border-radius: 999px;
   padding: 0.5rem 1rem;
   font-weight: 600;
@@ -76,10 +77,12 @@ body {
   color: #fff;
 }
 
-.sign-in {
+.sign-in,
+.auth-link-btn {
   border: 1px solid #7fa6da;
   background: #ffffff;
   color: #163768;
+  text-decoration: none;
 }
 
 .hero {
@@ -212,6 +215,10 @@ h1 {
   color: #1f4b88;
 }
 
+.full-width {
+  width: 100%;
+}
+
 .promos {
   margin-top: 24px;
   display: grid;
@@ -235,6 +242,69 @@ h1 {
   margin: 0;
   color: var(--muted);
   font-size: 0.92rem;
+}
+
+.login-shell {
+  min-height: calc(100vh - 72px);
+  display: grid;
+  place-items: center;
+  padding: 32px 16px;
+}
+
+.login-card {
+  width: min(460px, 100%);
+  background: #fff;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+  padding: 24px;
+}
+
+.login-card h1 {
+  margin-bottom: 8px;
+  font-size: 1.8rem;
+}
+
+.login-card p {
+  margin: 0 0 16px;
+  color: var(--muted);
+}
+
+.login-form {
+  display: grid;
+  gap: 12px;
+}
+
+.login-form label {
+  display: grid;
+  gap: 6px;
+  font-size: 0.9rem;
+  color: #3c4c67;
+}
+
+.login-form input[type="email"],
+.login-form input[type="password"] {
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  padding: 0.75rem;
+  font-size: 0.95rem;
+}
+
+.inline-check {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.login-status {
+  margin: 12px 0;
+  font-size: 0.92rem;
+}
+
+.login-back {
+  color: #1f4b88;
+  text-decoration: none;
+  font-weight: 600;
 }
 
 .results-page-header {
