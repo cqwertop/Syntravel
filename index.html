@@ -1,37 +1,102 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <title>AI Travel Optimizer</title>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>TravelAI | Smart Trip Search</title>
   <link rel="stylesheet" href="css/style.css">
 </head>
 <body>
+  <header class="site-header">
+    <div class="container nav-wrap">
+      <div class="brand">TravelAI</div>
+      <nav class="main-nav" aria-label="Primary">
+        <a href="#">Stays</a>
+        <a href="#">Flights</a>
+        <a href="#">Cars</a>
+        <a href="#">Packages</a>
+        <a href="#">Deals</a>
+      </nav>
+      <button class="sign-in">Sign in</button>
+    </div>
+  </header>
 
-<header class="top-bar">
-  <h1>TravelAI</h1>
-</header>
+  <main>
+    <section class="hero">
+      <div class="hero-backdrop"></div>
+      <div class="container hero-content">
+        <p class="eyebrow">Travel planning, upgraded</p>
+        <h1>Plan and book your next trip in one place</h1>
+        <p class="subcopy">Search flights, hotels, and bundles with live data from your API.</p>
 
-<section class="search-box">
-  <div class="tabs">
-    <button class="active">Packages</button>
-    <button>Flights</button>
-    <button>Hotels</button>
-    <button>Cars</button>
-  </div>
+        <section class="search-panel" aria-label="Trip search">
+          <div class="tabs" role="tablist" aria-label="Travel products">
+            <button class="tab active" data-type="packages" role="tab" aria-selected="true">Packages</button>
+            <button class="tab" data-type="flights" role="tab" aria-selected="false">Flights</button>
+            <button class="tab" data-type="hotels" role="tab" aria-selected="false">Hotels</button>
+            <button class="tab" data-type="cars" role="tab" aria-selected="false">Cars</button>
+          </div>
 
-  <div class="inputs">
-    <input placeholder="From">
-    <input placeholder="To">
-    <input type="date">
-    <input type="date">
-    <input type="number" placeholder="Travelers">
-  </div>
+          <form id="searchForm" class="search-grid">
+            <label>
+              <span>From</span>
+              <input name="from" placeholder="New York (JFK)" required>
+            </label>
+            <label>
+              <span>To</span>
+              <input name="to" placeholder="London (LHR)" required>
+            </label>
+            <label>
+              <span>Depart</span>
+              <input name="departDate" type="date" required>
+            </label>
+            <label>
+              <span>Return</span>
+              <input name="returnDate" type="date">
+            </label>
+            <label>
+              <span>Travelers</span>
+              <input name="travelers" type="number" min="1" value="2" required>
+            </label>
 
-  <div class="actions">
-    <button class="primary">🔍 Search</button>
-    <button class="secondary">🤖 Let AI Decide</button>
-  </div>
-</section>
+            <div class="search-options">
+              <label><input type="checkbox" name="directOnly"> Direct flights only</label>
+              <label><input type="checkbox" name="refundable"> Refundable options</label>
+            </div>
 
-<script src="js/home.js"></script>
+            <div class="actions">
+              <button type="submit" class="btn-primary">Search deals</button>
+              <button type="button" id="aiButton" class="btn-secondary">Let AI decide</button>
+            </div>
+          </form>
+        </section>
+      </div>
+    </section>
+
+    <section class="container promos" aria-label="Trending deals">
+      <article class="promo-card">
+        <h3>City breaks under $499</h3>
+        <p>Curated short trips for the next 30 days.</p>
+      </article>
+      <article class="promo-card">
+        <h3>Member prices unlocked</h3>
+        <p>Save instantly on selected hotels and bundles.</p>
+      </article>
+      <article class="promo-card">
+        <h3>Flexible booking options</h3>
+        <p>Filter by refundable stays and cancellable flights.</p>
+      </article>
+    </section>
+
+    <section class="container results-wrap" aria-live="polite">
+      <div class="results-header">
+        <h2>Search Results</h2>
+        <p id="statusText">Enter your trip details to see live options.</p>
+      </div>
+      <div id="results" class="results-grid"></div>
+    </section>
+  </main>
+
+  <script src="js/home.js"></script>
 </body>
 </html>
