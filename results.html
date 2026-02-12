@@ -1,17 +1,41 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-  <title>Results</title>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>TravelAI | Search Results</title>
   <link rel="stylesheet" href="css/style.css">
 </head>
 <body>
+  <header class="site-header">
+    <div class="container nav-wrap">
+      <a class="brand" href="index.html">TravelAI</a>
+      <nav class="main-nav" aria-label="Primary">
+        <a href="index.html#searchPanel">New Search</a>
+        <a href="results.html?type=packages">Packages</a>
+        <a href="results.html?type=flights">Flights</a>
+        <a href="results.html?type=hotels">Hotels</a>
+        <a href="results.html?type=cars">Cars</a>
+      </nav>
+      <div class="auth-actions">
+        <button id="loginBtn" class="login">Log in</button>
+        <button id="signInBtn" class="sign-in">Sign in</button>
+      </div>
+    </div>
+  </header>
 
-<h2 style="padding: 2rem">Results</h2>
+  <main>
+    <section class="container results-page-header">
+      <h1>Trip Results</h1>
+      <p id="statusText">Loading options...</p>
+      <a class="btn-secondary btn-link" href="index.html#searchPanel">Edit search</a>
+    </section>
 
-<div id="results"></div>
+    <section class="container results-wrap" aria-live="polite">
+      <div id="results" class="results-grid"></div>
+    </section>
+  </main>
 
-<script src="js/data.js"></script>
-<script src="js/ai.js"></script>
-<script src="js/results.js"></script>
+  <script src="js/results.js"></script>
 </body>
 </html>

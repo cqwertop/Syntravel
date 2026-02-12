@@ -9,15 +9,18 @@
 <body>
   <header class="site-header">
     <div class="container nav-wrap">
-      <div class="brand">TravelAI</div>
+      <a class="brand" href="index.html">TravelAI</a>
       <nav class="main-nav" aria-label="Primary">
-        <a href="#">Stays</a>
-        <a href="#">Flights</a>
-        <a href="#">Cars</a>
-        <a href="#">Packages</a>
-        <a href="#">Deals</a>
+        <a href="results.html?type=hotels">Stays</a>
+        <a href="results.html?type=flights">Flights</a>
+        <a href="results.html?type=cars">Cars</a>
+        <a href="#searchPanel">Packages</a>
+        <a href="#promos">Deals</a>
       </nav>
-      <button class="sign-in">Sign in</button>
+      <div class="auth-actions">
+        <button id="loginBtn" class="login">Log in</button>
+        <button id="signInBtn" class="sign-in">Sign in</button>
+      </div>
     </div>
   </header>
 
@@ -29,15 +32,16 @@
         <h1>Plan and book your next trip in one place</h1>
         <p class="subcopy">Search flights, hotels, and bundles with live data from your API.</p>
 
-        <section class="search-panel" aria-label="Trip search">
+        <section id="searchPanel" class="search-panel" aria-label="Trip search">
           <div class="tabs" role="tablist" aria-label="Travel products">
-            <button class="tab active" data-type="packages" role="tab" aria-selected="true">Packages</button>
-            <button class="tab" data-type="flights" role="tab" aria-selected="false">Flights</button>
-            <button class="tab" data-type="hotels" role="tab" aria-selected="false">Hotels</button>
-            <button class="tab" data-type="cars" role="tab" aria-selected="false">Cars</button>
+            <button type="button" class="tab active" data-type="packages" role="tab" aria-selected="true">Packages</button>
+            <button type="button" class="tab" data-type="flights" role="tab" aria-selected="false">Flights</button>
+            <button type="button" class="tab" data-type="hotels" role="tab" aria-selected="false">Hotels</button>
+            <button type="button" class="tab" data-type="cars" role="tab" aria-selected="false">Cars</button>
           </div>
 
           <form id="searchForm" class="search-grid">
+            <input type="hidden" name="type" value="packages">
             <label>
               <span>From</span>
               <input name="from" placeholder="New York (JFK)" required>
@@ -73,7 +77,7 @@
       </div>
     </section>
 
-    <section class="container promos" aria-label="Trending deals">
+    <section id="promos" class="container promos" aria-label="Trending deals">
       <article class="promo-card">
         <h3>City breaks under $499</h3>
         <p>Curated short trips for the next 30 days.</p>
@@ -86,14 +90,6 @@
         <h3>Flexible booking options</h3>
         <p>Filter by refundable stays and cancellable flights.</p>
       </article>
-    </section>
-
-    <section class="container results-wrap" aria-live="polite">
-      <div class="results-header">
-        <h2>Search Results</h2>
-        <p id="statusText">Enter your trip details to see live options.</p>
-      </div>
-      <div id="results" class="results-grid"></div>
     </section>
   </main>
 
