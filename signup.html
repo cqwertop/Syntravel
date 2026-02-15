@@ -39,12 +39,17 @@
           <input type="password" name="password" placeholder="Enter your password" required>
         </label>
 
-        <label class="inline-check">
-          <input type="checkbox" name="rememberMe">
-          <span>Remember me</span>
+        <label>
+          <span>Confirm Password</span>
+          <input type="password" name="confirmPassword" placeholder="Confirm your password" required>
         </label>
 
-        <button id="loginSubmit" type="submit" class="btn-primary full-width">Log in</button>
+        <label class="inline-check">
+          <input type="checkbox" name="agreeTerms">
+          <span>I agree to the terms</span>
+        </label>
+
+        <button id="signupSubmit" type="submit" class="btn-primary full-width">Sign up</button>
       </form>
 
       <div id="g_id_onload" data-client_id="REPLACE_WITH_GOOGLE_CLIENT_ID" data-auto_prompt="false"></div>
