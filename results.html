@@ -17,9 +17,16 @@
         <a href="results.html?type=hotels">Hotels</a>
         <a href="results.html?type=cars">Cars</a>
       </nav>
-      <div class="auth-actions">
+      <div class="auth-actions" id="authActions">
         <button id="loginBtn" class="login">Log in</button>
         <button id="signInBtn" class="sign-in">Sign in</button>
+      </div>
+      <div id="profileContainer" class="profile-container" style="display:none;">
+        <img id="profilePic" class="profile-pic" alt="Profile">
+        <div id="profileMenu" class="profile-menu">
+          <a href="#settings">Settings</a>
+          <a href="#logout" id="logoutBtn">Logout</a>
+        </div>
       </div>
     </div>
   </header>
@@ -37,5 +44,6 @@
   </main>
 
   <script src="js/results.js"></script>
+  <script src="js/auth.js"></script>
 </body>
 </html>

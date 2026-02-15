@@ -16,9 +16,16 @@
         <a href="results.html?type=flights">Flights</a>
         <a href="results.html?type=hotels">Hotels</a>
       </nav>
-      <div class="auth-actions">
+      <div class="auth-actions" id="authActions">
         <a class="login auth-link-btn" href="login.html">Log in</a>
         <a class="sign-in auth-link-btn" href="signup.html">Sign up</a>
+      </div>
+      <div id="profileContainer" class="profile-container" style="display:none;">
+        <img id="profilePic" class="profile-pic" alt="Profile">
+        <div id="profileMenu" class="profile-menu">
+          <a href="#settings">Settings</a>
+          <a href="#logout" id="logoutBtn">Logout</a>
+        </div>
       </div>
     </div>
   </header>
@@ -58,5 +65,6 @@
 
   <script src="https://accounts.google.com/gsi/client" async defer></script>
   <script src="js/login.js"></script>
+  <script src="js/auth.js"></script>
 </body>
 </html>

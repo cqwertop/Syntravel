@@ -17,9 +17,16 @@
         <a href="results.html?type=flights">Flights</a>
         <a href="results.html?type=hotels">Hotels</a>
       </nav>
-      <div class="auth-actions">
+      <div class="auth-actions" id="authActions">
         <a class="login auth-link-btn" href="login.html">Log in</a>
         <a class="sign-in auth-link-btn" href="signup.html">Sign up</a>
+      </div>
+      <div id="profileContainer" class="profile-container" style="display:none;">
+        <img id="profilePic" class="profile-pic" alt="Profile">
+        <div id="profileMenu" class="profile-menu">
+          <a href="#settings">Settings</a>
+          <a href="#logout" id="logoutBtn">Logout</a>
+        </div>
       </div>
     </div>
   </header>
@@ -48,7 +55,7 @@
         <button id="signupSubmit" type="submit" class="btn-primary full-width">Sign up</button>
       </form>
 
-      <div id="g_id_onload" data-client_id="107932772280-gbin31qmsi4dehvoikgtd50dm4qggvus.apps.googleusercontent.com" data-auto_prompt="false"></div>
+      <div id="g_id_onload" data-client_id="107932772280-gbin31qmsi4dehvoikgtd50dm4qggvus.apps.googleusercontent.com" data-callback="handleCredentialResponse" data-auto_prompt="false"></div>
       <div class="g_id_signin"></div>
       
       <p id="loginStatus" class="login-status">Enter credentials to continue.</p>
@@ -57,5 +64,6 @@
   </main>
 
   <script src="js/login.js"></script>
+  <script src="js/auth.js"></script>
 </body>
 </html>
