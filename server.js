@@ -72,7 +72,49 @@ async function forwardToAmadeus(path, reqQuery, res) {
 // Flight offers proxy
 app.get('/api/amadeus/flight-offers', async (req, res) => {
   console.log('[proxy] incoming request', req.path, req.query);
-  await forwardToAmadeus('/shopping/flight-offers', req.query, res);
+
+  try {
+    const t = await ensureToken();
+    // Build request body from query params (Amadeus expects POST JSON for flight offers)
+    const body = {
+      originDestination: [
+        {
+          id: '1',
+          originLocationCode: req.query.originLocationCode,
+          destinationLocationCode: req.query.destinationLocationCode,
+          departureDate: req.query.departureDate
+        }
+      ],
+      travelers: [],
+      sources: ['GDS']
+    };
+
+    const adults = parseInt(req.query.adults || '1', 10);
+    for (let i = 0; i < adults; i++) body.travelers.push({ id: String(i + 1) });
+    if (req.query.returnDate) body.originDestination.push({ id: '2', originLocationCode: req.query.destinationLocationCode, destinationLocationCode: req.query.originLocationCode, departureDate: req.query.returnDate });
+
+    const url = `${BASE_URL}/shopping/flight-offers`;
+    console.log('[proxy] POST to Amadeus (flight-offers):', url, 'body=', JSON.stringify(body));
+
+    let r = await fetch(url, { method: 'POST', headers: { Authorization: `Bearer ${t}`, 'Content-Type': 'application/json' }, body: JSON.stringify(body) });
+    let respText = await r.text();
+    if (!r.ok) {
+      console.error('[proxy] Amadeus responded', r.status, respText);
+      if (r.status === 404) {
+        // Retry against production
+        const PROD_BASE = 'https://api.amadeus.com/v2';
+        const prodUrl = `${PROD_BASE}/shopping/flight-offers`;
+        console.log('[proxy] retrying POST against production Amadeus URL:', prodUrl);
+        r = await fetch(prodUrl, { method: 'POST', headers: { Authorization: `Bearer ${t}`, 'Content-Type': 'application/json' }, body: JSON.stringify(body) });
+        respText = await r.text();
+        if (!r.ok) console.error('[proxy] Production Amadeus responded', r.status, respText);
+      }
+    }
+    res.status(r.status).send(respText);
+  } catch (err) {
+    console.error('Proxy error (flight-offers):', err);
+    res.status(500).json({ error: err.message });
+  }
 });
 
 // Hotels by city proxy (reference-data)
