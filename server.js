@@ -45,8 +45,12 @@ async function forwardToAmadeus(path, reqQuery, res) {
     const t = await ensureToken();
     const qs = new URLSearchParams(reqQuery).toString();
     const url = `${BASE_URL}${path}${qs ? `?${qs}` : ''}`;
+    console.log('[proxy] forwarding to Amadeus URL:', url);
     const r = await fetch(url, { headers: { Authorization: `Bearer ${t}`, 'Content-Type': 'application/json' } });
     const body = await r.text();
+    if (!r.ok) {
+      console.error('[proxy] Amadeus responded', r.status, body);
+    }
     res.status(r.status).send(body);
   } catch (err) {
     console.error('Proxy error:', err);
