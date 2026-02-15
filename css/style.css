@@ -205,6 +205,31 @@ h1 {
   display: inline-block;
 }
 
+.btn-google {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  border: 1px solid var(--line);
+  background: #fff;
+  color: var(--ink);
+  padding: 0.75rem 1rem;
+  border-radius: 10px;
+  font-weight: 700;
+  cursor: pointer;
+  text-decoration: none;
+}
+
+.btn-google .google-icon {
+  display: inline-flex;
+  width: 20px;
+  height: 20px;
+}
+
+.btn-google:hover {
+  box-shadow: 0 6px 18px rgba(7,33,70,0.08);
+}
+
 .btn-primary {
   background: var(--brand-yellow);
   color: #1e2b3f;

@@ -56,18 +56,42 @@ async function setupFirebaseLogin() {
       }
     };
   };
+
+  // Google sign-in helper exposed to the rest of the app.
+  window.googleSignIn = async ({ rememberMe } = {}) => {
+    await authModule.setPersistence(
+      auth,
+      rememberMe ? authModule.browserLocalPersistence : authModule.browserSessionPersistence
+    );
+
+    const provider = new authModule.GoogleAuthProvider();
+    const result = await authModule.signInWithPopup(auth, provider);
+    const token = await result.user.getIdToken();
+
+    return {
+      token,
+      user: {
+        uid: result.user.uid,
+        email: result.user.email
+      }
+    };
+  };
 }
 
 const loginForm = document.getElementById("loginForm");
 const loginSubmit = document.getElementById("loginSubmit");
 const loginStatus = document.getElementById("loginStatus");
+const googleBtn = document.getElementById("googleSignIn");
 const redirectUrl = new URLSearchParams(window.location.search).get("redirect") || "index.html";
+
+if (googleBtn) googleBtn.disabled = true;
 
 bootstrap();
 
 async function bootstrap() {
   try {
     await setupFirebaseLogin();
+    if (googleBtn) googleBtn.disabled = false;
   } catch (error) {
     loginStatus.textContent = error.message || "Firebase setup failed. API login fallback is still available.";
   }
@@ -109,6 +133,47 @@ loginForm.addEventListener("submit", async (event) => {
     loginSubmit.disabled = false;
   }
 });
+
+if (googleBtn) {
+  googleBtn.addEventListener("click", async () => {
+    const rememberMe = loginForm.elements.rememberMe.checked;
+
+    loginSubmit.disabled = true;
+    googleBtn.disabled = true;
+    loginStatus.textContent = "Signing in with Google...";
+
+    try {
+      if (typeof window.googleSignIn !== "function") {
+        throw new Error("Google sign-in is not available. Check Firebase configuration.");
+      }
+
+      const data = await window.googleSignIn({ rememberMe });
+      const token = data.token || data.accessToken || data.jwt || "";
+      const user = data.user || {};
+
+      if (!token) {
+        throw new Error("Login succeeded but no token was returned.");
+      }
+
+      localStorage.setItem("authToken", token);
+      localStorage.setItem("authUser", JSON.stringify(user));
+      localStorage.setItem("authLoggedIn", "true");
+
+      if (!rememberMe) {
+        sessionStorage.setItem("authToken", token);
+        sessionStorage.setItem("authUser", JSON.stringify(user));
+      }
+
+      loginStatus.textContent = "Login successful. Redirecting...";
+      window.location.href = redirectUrl;
+    } catch (error) {
+      loginStatus.textContent = error.message || "Unable to sign in with Google.";
+    } finally {
+      loginSubmit.disabled = false;
+      if (googleBtn) googleBtn.disabled = false;
+    }
+  });
+}
 
 async function login(payload) {
   if (typeof window.firebaseLogin === "function") {
