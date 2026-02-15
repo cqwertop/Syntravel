@@ -47,16 +47,16 @@
         <button id="loginSubmit" type="submit" class="btn-primary full-width">Log in</button>
       </form>
 
-      <button id="googleSignIn" type="button" class="btn-google full-width">
-        <img class="google-icon" src="signinicon.png" alt="Google sign-in" />
-        <span>Sign in with Google</span>
-      </button>
+      <!-- Google Identity Services button placeholder. Replace CLIENT_ID below with your OAuth client ID. -->
+      <div id="g_id_onload" data-client_id="REPLACE_WITH_GOOGLE_CLIENT_ID" data-auto_prompt="false"></div>
+      <div class="g_id_signin"></div>
 
       <p id="loginStatus" class="login-status">Enter credentials to continue.</p>
       <a class="login-back" href="index.html">Back to home</a>
     </section>
   </main>
 
+  <script src="https://accounts.google.com/gsi/client" async defer></script>
   <script src="js/login.js"></script>
 </body>
 </html>
