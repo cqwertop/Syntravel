@@ -71,16 +71,19 @@ async function forwardToAmadeus(path, reqQuery, res) {
 
 // Flight offers proxy
 app.get('/api/amadeus/flight-offers', async (req, res) => {
+  console.log('[proxy] incoming request', req.path, req.query);
   await forwardToAmadeus('/shopping/flight-offers', req.query, res);
 });
 
 // Hotels by city proxy (reference-data)
 app.get('/api/amadeus/hotels-by-city', async (req, res) => {
+  console.log('[proxy] incoming request', req.path, req.query);
   await forwardToAmadeus('/reference-data/locations/hotels/by-city', req.query, res);
 });
 
 // Car rental offers proxy
 app.get('/api/amadeus/car-rental-offers', async (req, res) => {
+  console.log('[proxy] incoming request', req.path, req.query);
   await forwardToAmadeus('/shopping/car-rental-offers', req.query, res);
 });
 
