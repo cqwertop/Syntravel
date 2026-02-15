@@ -46,10 +46,21 @@ async function forwardToAmadeus(path, reqQuery, res) {
     const qs = new URLSearchParams(reqQuery).toString();
     const url = `${BASE_URL}${path}${qs ? `?${qs}` : ''}`;
     console.log('[proxy] forwarding to Amadeus URL:', url);
-    const r = await fetch(url, { headers: { Authorization: `Bearer ${t}`, 'Content-Type': 'application/json' } });
-    const body = await r.text();
+    let r = await fetch(url, { headers: { Authorization: `Bearer ${t}`, 'Content-Type': 'application/json' } });
+    let body = await r.text();
     if (!r.ok) {
       console.error('[proxy] Amadeus responded', r.status, body);
+      // If sandbox returns 404, retry against production endpoint as a fallback
+      if (r.status === 404) {
+        const PROD_BASE = 'https://api.amadeus.com/v2';
+        const prodUrl = `${PROD_BASE}${path}${qs ? `?${qs}` : ''}`;
+        console.log('[proxy] retrying against production Amadeus URL:', prodUrl);
+        r = await fetch(prodUrl, { headers: { Authorization: `Bearer ${t}`, 'Content-Type': 'application/json' } });
+        body = await r.text();
+        if (!r.ok) {
+          console.error('[proxy] Production Amadeus responded', r.status, body);
+        }
+      }
     }
     res.status(r.status).send(body);
   } catch (err) {
