@@ -1,48 +1,20 @@
-// Amadeus API Configuration
-const AMADEUS_CONFIG = {
-  clientId: "O0Rgkj5tLoq1FGjHg10UYHP8xdCqLyBz",
-  baseUrl: "https://api.amadeus.com/v2",
-  authUrl: "https://api.amadeus.com/v1/security/oauth2/token"
-};
+// NOTE: For security and CORS reasons, Amadeus requires the client credentials
+// exchange to happen on a trusted server. The browser cannot reliably call the
+// token endpoint directly. This file now calls a local proxy at /api/amadeus/*
+// which performs the token exchange and forwards requests to Amadeus.
 
-let amadeusAccessToken = null;
-let tokenExpiry = null;
+const AMADEUS_PROXY_BASE = "/api/amadeus";
 
-/**
- * Get or refresh Amadeus access token
- */
-async function getAmadeusToken() {
-  // Check if token is still valid
-  if (amadeusAccessToken && tokenExpiry && new Date().getTime() < tokenExpiry) {
-    return amadeusAccessToken;
+// Helper: forward client requests to the proxy server which handles auth
+async function proxyGet(path, queryParams = {}) {
+  const qs = new URLSearchParams(queryParams).toString();
+  const url = `${AMADEUS_PROXY_BASE}${path}${qs ? `?${qs}` : ""}`;
+  const res = await fetch(url, { headers: { "Content-Type": "application/json" } });
+  if (!res.ok) {
+    const text = await res.text().catch(() => "");
+    throw new Error(`Proxy request failed: ${res.status} ${text}`);
   }
-
-  try {
-    const response = await fetch(AMADEUS_CONFIG.authUrl, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/x-www-form-urlencoded"
-      },
-      body: new URLSearchParams({
-        grant_type: "client_credentials",
-        client_id: AMADEUS_CONFIG.clientId,
-        client_secret: "AqKT83IrA1AkRnAF" // You'll need to add this if using OAuth
-      })
-    });
-
-    if (!response.ok) {
-      throw new Error("Failed to get Amadeus token");
-    }
-
-    const data = await response.json();
-    amadeusAccessToken = data.access_token;
-    tokenExpiry = new Date().getTime() + (data.expires_in * 1000);
-    
-    return amadeusAccessToken;
-  } catch (error) {
-    console.error("Token fetch failed:", error);
-    throw error;
-  }
+  return res.json();
 }
 
 /**
@@ -50,39 +22,19 @@ async function getAmadeusToken() {
  */
 async function searchFlights(from, to, departDate, returnDate, travelers) {
   try {
-    const token = await getAmadeusToken();
-    
-    // Extract IATA codes from location strings (e.g., "New York (JFK)" -> "JFK")
+    // Use proxy to perform authenticated call
     const fromCode = extractIataCode(from);
     const toCode = extractIataCode(to);
-
-    const params = new URLSearchParams({
+    const params = {
       originLocationCode: fromCode,
       destinationLocationCode: toCode,
       departureDate: departDate,
       adults: travelers,
       max: "12"
-    });
+    };
+    if (returnDate) params.returnDate = returnDate;
 
-    if (returnDate) {
-      params.append("returnDate", returnDate);
-    }
-
-    const url = `${AMADEUS_CONFIG.baseUrl}/shopping/flight-offers?${params}`;
-    
-    const response = await fetch(url, {
-      headers: {
-        "Authorization": `Bearer ${token}`,
-        "Content-Type": "application/json"
-      }
-    });
-
-    if (!response.ok) {
-      console.error("Flight search failed:", response.status);
-      throw new Error("Flight search failed");
-    }
-
-    return await response.json();
+    return await proxyGet('/flight-offers', params);
   } catch (error) {
     console.error("Flight search error:", error);
     throw error;
@@ -94,34 +46,15 @@ async function searchFlights(from, to, departDate, returnDate, travelers) {
  */
 async function searchHotels(city, checkInDate, checkOutDate, travelers) {
   try {
-    const token = await getAmadeusToken();
-    
-    // Get city code from location string
     const cityCode = extractIataCode(city);
-
-    const params = new URLSearchParams({
+    const params = {
       cityCode: cityCode,
       checkInDate: checkInDate,
       checkOutDate: checkOutDate,
       adults: travelers,
       max: "12"
-    });
-
-    const url = `${AMADEUS_CONFIG.baseUrl}/reference-data/locations/hotels/by-city?${params}`;
-    
-    const response = await fetch(url, {
-      headers: {
-        "Authorization": `Bearer ${token}`,
-        "Content-Type": "application/json"
-      }
-    });
-
-    if (!response.ok) {
-      console.error("Hotel search failed:", response.status);
-      throw new Error("Hotel search failed");
-    }
-
-    return await response.json();
+    };
+    return await proxyGet('/hotels-by-city', params);
   } catch (error) {
     console.error("Hotel search error:", error);
     throw error;
@@ -133,9 +66,7 @@ async function searchHotels(city, checkInDate, checkOutDate, travelers) {
  */
 async function searchCars(location, startDate, endDate, pickupTime, dropoffTime) {
   try {
-    const token = await getAmadeusToken();
-    
-    const params = new URLSearchParams({
+    const params = {
       pickupLocationCode: extractIataCode(location),
       dropoffLocationCode: extractIataCode(location),
       pickupDate: startDate,
@@ -143,23 +74,8 @@ async function searchCars(location, startDate, endDate, pickupTime, dropoffTime)
       pickupTime: pickupTime || "10:00",
       dropoffTime: dropoffTime || "10:00",
       max: "12"
-    });
-
-    const url = `${AMADEUS_CONFIG.baseUrl}/shopping/car-rental-offers?${params}`;
-    
-    const response = await fetch(url, {
-      headers: {
-        "Authorization": `Bearer ${token}`,
-        "Content-Type": "application/json"
-      }
-    });
-
-    if (!response.ok) {
-      console.error("Car search failed:", response.status);
-      throw new Error("Car search failed");
-    }
-
-    return await response.json();
+    };
+    return await proxyGet('/car-rental-offers', params);
   } catch (error) {
     console.error("Car search error:", error);
     throw error;
