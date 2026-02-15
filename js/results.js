@@ -64,38 +64,92 @@ function getApiConfig() {
 async function searchTrips(input) {
   const config = getApiConfig();
 
-  if (!config.baseUrl) {
-    throw new Error("No API configured.");
+  try {
+    let data;
+    
+    // Use Amadeus API if available
+    if (typeof searchFlights !== 'undefined') {
+      switch (input.type) {
+        case 'flights':
+          data = await searchFlights(input.from, input.to, input.departDate, input.returnDate, input.travelers);
+          return formatFlightResults(data);
+        
+        case 'hotels':
+          // For hotels, use departure date as check-in and return date as check-out
+          data = await searchHotels(input.to, input.departDate, input.returnDate || input.departDate, input.travelers);
+          return formatHotelResults(data);
+        
+        case 'packages':
+          // For packages, get both flights and hotels
+          try {
+            const flights = await searchFlights(input.from, input.to, input.departDate, input.returnDate, input.travelers);
+            const hotels = await searchHotels(input.to, input.departDate, input.returnDate || input.departDate, input.travelers);
+            
+            const flightResults = formatFlightResults(flights);
+            const hotelResults = formatHotelResults(hotels);
+            
+            // Combine and return top results
+            return [...flightResults, ...hotelResults].slice(0, 12);
+          } catch (e) {
+            console.warn('Package search partial failure:', e);
+            const flights = await searchFlights(input.from, input.to, input.departDate, input.returnDate, input.travelers);
+            return formatFlightResults(flights);
+          }
+        
+        case 'cars':
+          data = await searchCars(input.from, input.departDate, input.returnDate || input.departDate);
+          return data.data ? data.data.slice(0, 12).map(car => ({
+            title: car.vendor?.name || 'Car Rental',
+            subtitle: car.vehicle?.name || 'Economy',
+            price: Math.round(Number(car.price?.total || 50)),
+            currency: car.price?.currency || 'USD',
+            duration: `${car.rentalDays || 1} day${car.rentalDays > 1 ? 's' : ''}`,
+            tags: ['Unlimited miles', 'Free cancellation']
+          })) : [];
+        
+        default:
+          data = await searchFlights(input.from, input.to, input.departDate, input.returnDate, input.travelers);
+          return formatFlightResults(data);
+      }
+    }
+    
+    // Fallback to configured API if Amadeus unavailable
+    if (!config.baseUrl) {
+      throw new Error("No API configured.");
+    }
+
+    const query = new URLSearchParams({
+      type: input.type,
+      from: input.from,
+      to: input.to,
+      departDate: input.departDate,
+      returnDate: input.returnDate,
+      travelers: String(input.travelers),
+      directOnly: String(input.directOnly),
+      refundable: String(input.refundable)
+    });
+
+    const url = `${config.baseUrl}${config.endpoint}?${query.toString()}`;
+    const headers = {
+      "Content-Type": "application/json"
+    };
+
+    if (config.apiKey) {
+      headers.Authorization = `Bearer ${config.apiKey}`;
+      headers["x-api-key"] = config.apiKey;
+    }
+
+    const response = await fetch(url, { headers });
+
+    if (!response.ok) {
+      throw new Error("Live API request failed.");
+    }
+
+    return await response.json();
+  } catch (error) {
+    console.error('Search error:', error);
+    throw error;
   }
-
-  const query = new URLSearchParams({
-    type: input.type,
-    from: input.from,
-    to: input.to,
-    departDate: input.departDate,
-    returnDate: input.returnDate,
-    travelers: String(input.travelers),
-    directOnly: String(input.directOnly),
-    refundable: String(input.refundable)
-  });
-
-  const url = `${config.baseUrl}${config.endpoint}?${query.toString()}`;
-  const headers = {
-    "Content-Type": "application/json"
-  };
-
-  if (config.apiKey) {
-    headers.Authorization = `Bearer ${config.apiKey}`;
-    headers["x-api-key"] = config.apiKey;
-  }
-
-  const response = await fetch(url, { headers });
-
-  if (!response.ok) {
-    throw new Error("Live API request failed.");
-  }
-
-  return response.json();
 }
 
 function normalizeResults(data, input) {
