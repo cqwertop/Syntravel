@@ -18,13 +18,15 @@ function handleCredentialResponse(response) {
   localStorage.setItem('authLoggedIn', 'true');
   localStorage.setItem('authToken', response.credential);
   
-  // Update UI
+  console.log('User logged in:', user.email, 'Picture:', user.picture);
+  
+  // Update UI immediately
   showUserProfile(user);
   
-  // Redirect to homepage
+  // Redirect to homepage after a short delay to ensure UI updates
   setTimeout(() => {
     window.location.href = 'index.html';
-  }, 500);
+  }, 1000);
 }
 
 function showUserProfile(user) {
@@ -103,27 +105,7 @@ document.addEventListener('DOMContentLoaded', function() {
     }
   });
   
-  // Initialize Google Sign-In button if it exists
-  if (window.google && window.google.accounts && window.google.accounts.id) {
-    window.google.accounts.id.initialize({
-      client_id: '107932772280-gbin31qmsi4dehvoikgtd50dm4qggvus.apps.googleusercontent.com',
-      callback: handleCredentialResponse
-    });
-    
-    const gSigninDiv = document.querySelector('.g_id_signin');
-    const gIdOnload = document.getElementById('g_id_onload');
-    
-    if (gSigninDiv && !authUser) {
-      window.google.accounts.id.renderButton(
-        gSigninDiv,
-        { theme: 'outline', size: 'large', width: '100%' }
-      );
-    }
-  }
-});
-
-// Hide menu by default
-document.addEventListener('DOMContentLoaded', function() {
+  // Hide menu by default
   const profileMenu = document.getElementById('profileMenu');
   if (profileMenu) {
     profileMenu.style.display = 'none';
