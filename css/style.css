@@ -332,6 +332,12 @@ h1 {
   font-weight: 600;
 }
 
+.g_id_signin {
+  width: 100%;
+  display: flex;
+  justify-content: center;
+}
+
 .results-page-header {
   margin-top: 26px;
   display: grid;
