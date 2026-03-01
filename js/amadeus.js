@@ -94,7 +94,37 @@ function extractIataCode(location) {
  * Format Amadeus flight results for display
  */
 function formatFlightResults(data) {
-  if (!data.data || !Array.isArray(data.data)) {
+  // SerpApi Google Flights format
+  if (data && (Array.isArray(data.best_flights) || Array.isArray(data.other_flights))) {
+    const combined = [
+      ...(Array.isArray(data.best_flights) ? data.best_flights : []),
+      ...(Array.isArray(data.other_flights) ? data.other_flights : [])
+    ];
+
+    return combined.slice(0, 12).map((offer) => {
+      const segments = Array.isArray(offer.flights) ? offer.flights : [];
+      const firstSegment = segments[0] || {};
+      const lastSegment = segments[segments.length - 1] || {};
+      const fromCode = firstSegment.departure_airport?.id || "N/A";
+      const toCode = lastSegment.arrival_airport?.id || "N/A";
+      const stops = Math.max(0, segments.length - 1);
+
+      return {
+        title: `${fromCode} -> ${toCode}`,
+        subtitle: firstSegment.airline || "Multi-carrier",
+        price: Math.round(Number(offer.price || 0)),
+        currency: data.search_parameters?.currency || "USD",
+        duration: formatMinutes(offer.total_duration),
+        tags: [
+          stops === 0 ? "Direct" : `${stops} stop${stops > 1 ? "s" : ""}`,
+          offer.type || "Round trip"
+        ]
+      };
+    });
+  }
+
+  // Amadeus format
+  if (!data?.data || !Array.isArray(data.data)) {
     return [];
   }
 
@@ -102,25 +132,34 @@ function formatFlightResults(data) {
     const itinerary = flight.itineraries[0];
     const firstSegment = itinerary.segments[0];
     const lastSegment = itinerary.segments[itinerary.segments.length - 1];
-    
+
     const departTime = new Date(firstSegment.departure.at);
     const arriveTime = new Date(lastSegment.arrival.at);
     const duration = calculateDuration(departTime, arriveTime);
 
     return {
-      title: `${firstSegment.departure.iataCode} → ${lastSegment.arrival.iataCode}`,
+      title: `${firstSegment.departure.iataCode} -> ${lastSegment.arrival.iataCode}`,
       subtitle: flight.validatingAirlineCodes?.[0] || "Multi-carrier",
       price: Math.round(Number(flight.price.total)),
       currency: flight.price.currency,
       duration: duration,
       tags: [
-        itinerary.segments.length === 1 ? "Direct" : `${itinerary.segments.length - 1} stop${itinerary.segments.length > 2 ? 's' : ''}`,
+        itinerary.segments.length === 1 ? "Direct" : `${itinerary.segments.length - 1} stop${itinerary.segments.length > 2 ? "s" : ""}`,
         flight.instantTicketingRequired ? "Instant confirmation" : "Standard"
       ]
     };
   });
 }
 
+function formatMinutes(totalMinutes) {
+  const mins = Number(totalMinutes);
+  if (!Number.isFinite(mins) || mins <= 0) {
+    return "N/A";
+  }
+  const hours = Math.floor(mins / 60);
+  const minutes = mins % 60;
+  return minutes ? `${hours}h ${minutes}m` : `${hours}h`;
+}
 /**
  * Format Amadeus hotel results for display
  */
@@ -155,3 +194,4 @@ function calculateDuration(start, end) {
   }
   return `${hours}h ${minutes}m`;
 }
+
