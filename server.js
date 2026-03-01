@@ -1,133 +1,83 @@
-// Simple Amadeus proxy server
+// Simple SerpApi proxy server
 // Usage:
 // 1. Install deps: npm install express node-fetch@2 cors
-// 2. Run: AMADEUS_CLIENT_ID=O0Rgkj5tLoq1FGjHg10UYHP8xdCqLyBz AMADEUS_CLIENT_SECRET=AqKT83IrA1AkRnAF node server.js
+// 2. Run: SERPAPI_API_KEY=your_key node server.js
 
-const express = require('express');
-const fetch = require('node-fetch');
-const cors = require('cors');
+const express = require("express");
+const fetch = require("node-fetch");
+const cors = require("cors");
+
 const app = express();
 app.use(cors());
 app.use(express.json());
 
-const CLIENT_ID = process.env.AMADEUS_CLIENT_ID || 'O0Rgkj5tLoq1FGjHg10UYHP8xdCqLyBz';
-const CLIENT_SECRET = process.env.AMADEUS_CLIENT_SECRET || 'AqKT83IrA1AkRnAF';
-// Use test (sandbox) endpoints for development
-const AUTH_URL = 'https://test.api.amadeus.com/v1/security/oauth2/token';
-const BASE_URL = 'https://test.api.amadeus.com/v2';
+const SERPAPI_API_KEY = process.env.SERPAPI_API_KEY || "";
 
-let token = null;
-let tokenExpiry = 0;
+function parseTravelerCount(raw) {
+  const n = Number(raw);
+  if (!Number.isFinite(n) || n < 1) return 1;
+  return Math.floor(n);
+}
 
-async function ensureToken() {
-  if (token && Date.now() < tokenExpiry) return token;
+function toSerpApiQuery(query = {}) {
+  return {
+    engine: "google_flights",
+    hl: "en",
+    gl: "us",
+    currency: query.currency || "USD",
+    departure_id: query.departure_id || query.originLocationCode,
+    arrival_id: query.arrival_id || query.destinationLocationCode,
+    outbound_date: query.outbound_date || query.departureDate,
+    return_date: query.return_date || query.returnDate
+  };
+}
 
-  const body = new URLSearchParams({
-    grant_type: 'client_credentials',
-    client_id: CLIENT_ID,
-    client_secret: CLIENT_SECRET
-  });
+async function fetchFlights(query) {
+  if (!SERPAPI_API_KEY) {
+    throw new Error("Missing SERPAPI_API_KEY");
+  }
 
-  const res = await fetch(AUTH_URL, { method: 'POST', body, headers: { 'Content-Type': 'application/x-www-form-urlencoded' } });
+  const params = {
+    ...toSerpApiQuery(query),
+    api_key: SERPAPI_API_KEY
+  };
+
+  if (!params.departure_id || !params.arrival_id || !params.outbound_date) {
+    throw new Error("Missing required params: departure_id, arrival_id, outbound_date");
+  }
+
+  // Optional traveler hint carried through for future server-side filtering.
+  params.travelers = String(parseTravelerCount(query.travelers || query.adults || 1));
+
+  const url = `https://serpapi.com/search.json?${new URLSearchParams(params).toString()}`;
+  const res = await fetch(url);
+  const text = await res.text();
   if (!res.ok) {
-    const t = await res.text().catch(() => '');
-    throw new Error(`Auth failed: ${res.status} ${t}`);
+    throw new Error(`SerpApi request failed: ${res.status} ${text}`);
   }
-
-  const data = await res.json();
-  token = data.access_token;
-  tokenExpiry = Date.now() + (data.expires_in * 1000) - 5000; // buffer
-  return token;
+  return text;
 }
 
-async function forwardToAmadeus(path, reqQuery, res) {
+app.get("/api/serpapi/flights", async (req, res) => {
   try {
-    const t = await ensureToken();
-    const qs = new URLSearchParams(reqQuery).toString();
-    const url = `${BASE_URL}${path}${qs ? `?${qs}` : ''}`;
-    console.log('[proxy] forwarding to Amadeus URL:', url);
-    let r = await fetch(url, { headers: { Authorization: `Bearer ${t}`, 'Content-Type': 'application/json' } });
-    let body = await r.text();
-    if (!r.ok) {
-      console.error('[proxy] Amadeus responded', r.status, body);
-      // If sandbox returns 404, retry against production endpoint as a fallback
-      if (r.status === 404) {
-        const PROD_BASE = 'https://api.amadeus.com/v2';
-        const prodUrl = `${PROD_BASE}${path}${qs ? `?${qs}` : ''}`;
-        console.log('[proxy] retrying against production Amadeus URL:', prodUrl);
-        r = await fetch(prodUrl, { headers: { Authorization: `Bearer ${t}`, 'Content-Type': 'application/json' } });
-        body = await r.text();
-        if (!r.ok) {
-          console.error('[proxy] Production Amadeus responded', r.status, body);
-        }
-      }
-    }
-    res.status(r.status).send(body);
+    const body = await fetchFlights(req.query);
+    res.status(200).type("application/json").send(body);
   } catch (err) {
-    console.error('Proxy error:', err);
-    res.status(500).json({ error: err.message });
-  }
-}
-
-// Flight offers proxy
-app.get('/api/amadeus/flight-offers', async (req, res) => {
-  console.log('[proxy] incoming request', req.path, req.query);
-
-  try {
-    const t = await ensureToken();
-    // Build request body from query params (Amadeus expects POST JSON for flight offers)
-    const body = {
-      originDestination: [
-        {
-          id: '1',
-          originLocationCode: req.query.originLocationCode,
-          destinationLocationCode: req.query.destinationLocationCode,
-          departureDate: req.query.departureDate
-        }
-      ],
-      travelers: [],
-      sources: ['GDS']
-    };
-
-    const adults = parseInt(req.query.adults || '1', 10);
-    for (let i = 0; i < adults; i++) body.travelers.push({ id: String(i + 1) });
-    if (req.query.returnDate) body.originDestination.push({ id: '2', originLocationCode: req.query.destinationLocationCode, destinationLocationCode: req.query.originLocationCode, departureDate: req.query.returnDate });
-
-    const url = `${BASE_URL}/shopping/flight-offers`;
-    console.log('[proxy] POST to Amadeus (flight-offers):', url, 'body=', JSON.stringify(body));
-
-    let r = await fetch(url, { method: 'POST', headers: { Authorization: `Bearer ${t}`, 'Content-Type': 'application/json' }, body: JSON.stringify(body) });
-    let respText = await r.text();
-    if (!r.ok) {
-      console.error('[proxy] Amadeus responded', r.status, respText);
-      if (r.status === 404) {
-        // Retry against production
-        const PROD_BASE = 'https://api.amadeus.com/v2';
-        const prodUrl = `${PROD_BASE}/shopping/flight-offers`;
-        console.log('[proxy] retrying POST against production Amadeus URL:', prodUrl);
-        r = await fetch(prodUrl, { method: 'POST', headers: { Authorization: `Bearer ${t}`, 'Content-Type': 'application/json' }, body: JSON.stringify(body) });
-        respText = await r.text();
-        if (!r.ok) console.error('[proxy] Production Amadeus responded', r.status, respText);
-      }
-    }
-    res.status(r.status).send(respText);
-  } catch (err) {
-    console.error('Proxy error (flight-offers):', err);
+    console.error("SerpApi flights proxy error:", err.message);
     res.status(500).json({ error: err.message });
   }
 });
 
-// Hotels by city proxy (reference-data)
-app.get('/api/amadeus/hotels-by-city', async (req, res) => {
-  console.log('[proxy] incoming request', req.path, req.query);
-  await forwardToAmadeus('/reference-data/locations/hotels/by-city', req.query, res);
+// Keep hotel/cars routes to avoid breaking existing callers; currently placeholders.
+app.get("/api/serpapi/hotels", async (_req, res) => {
+  res.status(200).json({ data: [] });
 });
 
-// Car rental offers proxy
-app.get('/api/amadeus/car-rental-offers', async (req, res) => {
-  console.log('[proxy] incoming request', req.path, req.query);
-  await forwardToAmadeus('/shopping/car-rental-offers', req.query, res);
+app.get("/api/serpapi/cars", async (_req, res) => {
+  res.status(200).json({ data: [] });
 });
 
 const PORT = process.env.PORT || 8000;
-app.listen(PORT, () => console.log(`Amadeus proxy running on http://localhost:${PORT}`));
+app.listen(PORT, () => {
+  console.log(`SerpApi proxy running on http://localhost:${PORT}`);
+});

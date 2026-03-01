@@ -67,7 +67,7 @@ async function searchTrips(input) {
   try {
     let data;
     
-    // Use Amadeus API if available
+    // Use local travel data helpers if available
     if (typeof searchFlights !== 'undefined') {
       switch (input.type) {
         case 'flights':
@@ -113,7 +113,7 @@ async function searchTrips(input) {
       }
     }
     
-    // Fallback to configured API if Amadeus unavailable
+    // Fallback to configured API if local helpers are unavailable
     if (!config.baseUrl) {
       throw new Error("No API configured.");
     }
